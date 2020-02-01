@@ -5,74 +5,66 @@
   "
   (:require
     [clojure.string :as string]
-    [hickory.core :as h]))
+    [hickory.core :as h]
+    [bionumbers.parsers :as p]))
+
 
 (defn default-patterns []
   [
    {:name :int-range
     :patterns [#"\d+\s*-\s*\d+" #"(\d+,?)+\d+\s*-\s*(\d+,?)+\d+"]
-    :fn (fn int-range [s]
-          (let [[l u] (map read-string (string/split (string/replace s #"," "") #"\s*-\s*"))]
-            [l u]))}
+    :fn p/int-range}
 
    {:name :>range
     :patterns [#">\d+" #">(\d+,?)+"]
-    :fn (fn >range [s]
-          (let [[_ u] (string/split (string/replace s #"," "") #">")]
-            [(read-string u) Double/POSITIVE_INFINITY]))}
+    :fn p/>range}
 
    {:name :<range
     :patterns [#"<\d+" #"<(\d+,?)+"]
-    :fn (fn <range [s]
-          (let [[_ u] (string/split (string/replace s #"," "") #"<")]
-            [Double/NEGATIVE_INFINITY (read-string u)]))}
+    :fn p/<range}
 
    {:name :±double
     :patterns [#"\+/-\s*\d+.?\d*" #"±\s*\d+\.?\d*"]
-    :fn (fn ±double [s] (let [[_ vs] (string/split s #"\+/-\s*|±\s*") v (read-string vs)]
-              [(* -1 v) v]))}
+    :fn p/±double}
 
    {:name :a-number
     :patterns [#"\d+" #"\d+\.?\d*" #"\d+\.\d+[eE]-?\d+"]
-    :fn (fn a-number [s] (let [v (read-string s)]
-          [v v]))}
+    :fn p/a-number}
 
    {:name :approx
     :patterns [#"~\s*\d+" #"~\s*\d+\.\d+" #"~\s*\d+\.\d+[eE]-?\d+"]
-    :fn (fn approx [s] (let [[_ vs] (string/split s #"~\s*") v (read-string vs)]
-           [v v]))}
+    :fn p/approx}
 
    {:name :double-range
     :patterns [#"\d+\.?\d+\s*-\s*\d+\.?\d+"]
-    :fn (fn double-range [s] (let [[l u] (map read-string (string/split s #"\s*-\s*"))]
-          [l u]))}
+    :fn p/double-range}
 
    {:name :e-range
     :patterns [#"\d+\.\d+[eE]-?\d+\s+-\s+\d+[eE]-?\d+"
                #"\d+[eE]-?\d+\s+-\s+\d+\.\d+[eE]-?\d+"
                #"\d+\.\d+[eE]-?\d+\s+-\s+\d+\.\d+[eE]-?\d+"]
-    :fn (fn exp-range [s] (let [[l u] (map read-string (string/split s #"\s+-\s+"))]
-          [l u]))}
+    :fn p/exp-range}
 
    {:name :pow-range
     :patterns [#"\d+\s*-\s*\d+×\d+\^\d+"]
-    :fn (fn pow-range [s] (let [[l u e] (map read-string (string/split (string/replace (string/replace s #"," "") #"\^" "e") #"\s*-\s*|×"))]
-          [l u e]))}
+    :fn p/pow-range}
 
    {:name :double-e-range
     :patterns [#"\d+\.\d+\s*-\s*\d+\.\d+[eE]-?\d+"]
-    :fn (fn double-e-range [s] (let [[l u] (map read-string (string/split s #"\s*[^e^E]-\s*"))]
-          [l u]))}
+    :fn p/double-e-range}
 
    {:name :to-range
     :patterns [#"\d+[eE]-?\d+\s*to\s*\d+[eE]-?\d+"]
-    :fn (fn to-range [s] (let [[l u] (map read-string (string/split s #"\s*to\s*"))]
-          [l u]))}
+    :fn p/to-range}
    ])
 
 (defn parser
-  "Returns a function to parse strings
-   matched by various regexs"
+  "
+   Returns a function to parse strings
+   matched by various regexs
+   - the fn associated with the first
+   regex to match the string is applied
+  "
   ([]
     (parser (default-patterns)))
   ([pp]
