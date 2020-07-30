@@ -8,55 +8,13 @@
     [hickory.core :as h]
     [bionumbers.parsers :as p]))
 
-
 (defn default-patterns []
-  [
-   {:name :int-range
-    :patterns [#"\d+\s*-\s*\d+" #"(\d+,?)+\d+\s*-\s*(\d+,?)+\d+"]
-    :fn p/int-range}
-
-   {:name :>range
-    :patterns [#">\d+" #">(\d+,?)+"]
-    :fn p/>range}
-
-   {:name :<range
-    :patterns [#"<\d+" #"<(\d+,?)+"]
-    :fn p/<range}
-
-   {:name :±double
-    :patterns [#"\+/-\s*\d+.?\d*" #"±\s*\d+\.?\d*"]
-    :fn p/±double}
-
-   {:name :a-number
-    :patterns [#"\d+" #"\d+\.?\d*" #"\d+\.\d+[eE]-?\d+"]
-    :fn p/a-number}
-
-   {:name :approx
-    :patterns [#"~\s*\d+" #"~\s*\d+\.\d+" #"~\s*\d+\.\d+[eE]-?\d+"]
-    :fn p/approx}
-
-   {:name :double-range
-    :patterns [#"\d+\.?\d+\s*-\s*\d+\.?\d+"]
-    :fn p/double-range}
-
-   {:name :e-range
-    :patterns [#"\d+\.\d+[eE]-?\d+\s+-\s+\d+[eE]-?\d+"
-               #"\d+[eE]-?\d+\s+-\s+\d+\.\d+[eE]-?\d+"
-               #"\d+\.\d+[eE]-?\d+\s+-\s+\d+\.\d+[eE]-?\d+"]
-    :fn p/exp-range}
-
-   {:name :pow-range
-    :patterns [#"\d+\s*-\s*\d+×\d+\^\d+"]
-    :fn p/pow-range}
-
-   {:name :double-e-range
-    :patterns [#"\d+\.\d+\s*-\s*\d+\.\d+[eE]-?\d+"]
-    :fn p/double-e-range}
-
-   {:name :to-range
-    :patterns [#"\d+[eE]-?\d+\s*to\s*\d+[eE]-?\d+"]
-    :fn p/to-range}
-   ])
+  (sequence
+    (comp
+      (map meta)
+      (filter :patterns)
+      (map (fn [v] (assoc v :fn @(resolve (:name v))))))
+    (vals (ns-map 'bionumbers.parsers))))
 
 (defn parser
   "
@@ -107,7 +65,6 @@
       (fn [q]
         (-> q
           (update :range (fn [x] (-> x (string/replace #"'|," "") rp)))
-          (update :units string/lower-case)
           (update :value (fn [x] (if (and x (not= x "")) (read-string x) x)))))
     bionumbers-clj)))
 
@@ -144,5 +101,6 @@
 
 (defn overlapping-ranges [bionumbers-clj]
   (let [u (remove (comp (complement vector?) :range) bionumbers-clj)]
-    (for [{xr :range xu :units :as x} u {yr :range yu :units :as y} u]
-      (if (and (not= x y) (= xu yu) (overlapping? xr yr)) [x y]))))
+    (remove nil?
+      (for [{xr :range xu :units :as x} u {yr :range yu :units :as y} u]
+        (if (and (not= x y) (= xu yu) (overlapping? xr yr)) [x y])))))
