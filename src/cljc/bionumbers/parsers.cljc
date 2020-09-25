@@ -32,7 +32,7 @@
   (let [[_ vs] (string/split s #"~\s*") v (read-string vs)]
    [v v]))
 
-(defn ^{:patterns [#"\d+\.?\d+\s*-\s*\d+\.?\d+"]}
+(defn ^{:patterns [#"\d+\.\d+\s*-\s*\d+\.\d+" #"\d+\s*-\s*\d+\.\d+" #"\d+\.d+\s*-\s*\d+"]}
   double-range [s]
   (let [[l u] (map read-string (string/split s #"\s*-\s*"))]
    [l u]))

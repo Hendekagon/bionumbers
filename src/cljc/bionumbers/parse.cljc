@@ -8,12 +8,12 @@
     [hickory.core :as h]
     [bionumbers.parsers :as p]))
 
-(defn default-patterns []
+(def default-patterns
   (sequence
     (comp
       (map meta)
       (filter :patterns)
-      (map (fn [v] (assoc v :fn @(resolve (:name v))))))
+      (map (fn [v] (assoc v :fn @(ns-resolve 'bionumbers.parsers (:name v))))))
     (vals (ns-map 'bionumbers.parsers))))
 
 (defn parser
@@ -24,7 +24,7 @@
    regex to match the string is applied
   "
   ([]
-    (parser (default-patterns)))
+    (parser default-patterns))
   ([pp]
    (fn
      ([] pp)

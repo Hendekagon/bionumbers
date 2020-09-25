@@ -3,14 +3,14 @@
 Some code for converting the Bionumbers database, which comes for some reason in the form of an HTML table, into EDN
 
 ```
-(use bionumbers.parse)
+(require '[bionumbers.parse :as bp])
 
-(def result (html-clj (slurp "data/BioNumbers.xls")))
-
-(take 3 result)
+(take 3 (bp/html-clj (slurp "data/BioNumbers.xls")))
 
 ```
 
+will attempt to parse values and ranges, but there's so
+many inconsistent patterns remaining to cover
 
 #### References
 
