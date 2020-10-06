@@ -1,4 +1,4 @@
-# bionumber-clj
+# bionumbers
 
 Some code for converting the Bionumbers database, which comes for some reason in the form of an HTML table, into EDN
 
